@@ -1,0 +1,36 @@
+{
+  "_description": "Configuration file for mapping old ticker symbols to current ticker symbols",
+  "_instructions": [
+    "Add new mappings in the 'mappings' section below",
+    "Format: 'OLD_TICKER': 'NEW_TICKER'",
+    "Use exact ticker symbols as they appear in the historical data",
+    "Changes take effect when running: python sp500.py --update-names"
+  ],
+  "_examples": {
+    "company_rebranding": "FB -> META (Facebook to Meta Platforms)",
+    "ticker_format_standardization": "BRK-B -> BRK.B (format consistency)",
+    "merger_acquisitions": "KRFT -> KHC (Kraft merged with Heinz)"
+  },
+  "mappings": {
+    "FB": "META",
+    "BRKB": "BRK.B",
+    "BRK-B": "BRK.B",
+    "BF-B": "BF.B",
+    "KRFT": "KHC",
+    "DISCA": "WBD"
+  },
+  "_change_log": [
+    {
+      "date": "2025-08-14",
+      "changes": [
+        "Initial configuration file created",
+        "Added FB->META mapping for Facebook rebrand",
+        "Added GOOG->GOOGL for Google class standardization",
+        "Added Berkshire Hathaway format mappings (BRKB, BRK-B -> BRK.B)",
+        "Added Brown-Forman format mapping (BF-B -> BF.B)",
+        "Added Kraft Heinz merger mapping (KRFT -> KHC)",
+        "Added Warner Bros Discovery merger mapping (DISCA -> WBD)"
+      ]
+    }
+  ]
+}

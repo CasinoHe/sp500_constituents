@@ -4,6 +4,7 @@
 
 import os
 import sys
+import json
 from datetime import date
 
 import pandas as pd
@@ -83,6 +84,123 @@ def clean_historical_data():
     return cleaned_df
 
 
+def load_ticker_mappings():
+    """
+    Load ticker name mappings from the JSON configuration file.
+    Returns a dictionary of old_ticker -> new_ticker mappings.
+    """
+    config_file = 'ticker_name_mappings.json'
+    
+    try:
+        with open(config_file, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            return config.get('mappings', {})
+    except FileNotFoundError:
+        print(f"Warning: Configuration file '{config_file}' not found!")
+        print("Please create the configuration file or check the file path.")
+        return {}
+    except json.JSONDecodeError as e:
+        print(f"Error: Invalid JSON in configuration file '{config_file}': {e}")
+        return {}
+    except Exception as e:
+        print(f"Error loading configuration file '{config_file}': {e}")
+        return {}
+
+
+def update_historical_ticker_names():
+    """
+    Update historical ticker symbols to their current names and create a new file.
+    This handles cases like FB -> META, GOOG -> GOOGL, etc.
+    Creates 'sp_500_current_name_with_historical_components.csv'
+    
+    Ticker mappings are loaded from 'ticker_name_mappings.json'
+    """
+    
+    print("Loading ticker name mappings from configuration file...")
+    
+    # Load ticker changes from JSON configuration file
+    ticker_changes = load_ticker_mappings()
+    
+    if not ticker_changes:
+        print("No ticker mappings found. Please check your configuration file.")
+        return None
+    
+    print(f"Loaded {len(ticker_changes)} ticker mappings from configuration.")
+    print("Updating historical ticker names to current names...")
+    
+    # Read the historical components file
+    try:
+        df = pd.read_csv('sp_500_historical_components.csv')
+    except FileNotFoundError:
+        print("Error: sp_500_historical_components.csv not found!")
+        return None
+    
+    if df.empty:
+        print("Historical file is empty!")
+        return None
+    
+    # Process each row and update ticker names
+    updated_rows = []
+    changes_made = 0
+    
+    for idx, row in df.iterrows():
+        date = row['date']
+        tickers = row['tickers']
+        
+        # Split the tickers string into individual tickers
+        ticker_list = [ticker.strip() for ticker in tickers.split(',')]
+        
+        # Update ticker names if they exist in the mapping
+        updated_tickers = []
+        row_changes = 0
+        
+        for ticker in ticker_list:
+            if ticker in ticker_changes:
+                updated_tickers.append(ticker_changes[ticker])
+                row_changes += 1
+            else:
+                updated_tickers.append(ticker)
+        
+        # Sort the updated tickers to maintain consistency
+        updated_tickers.sort()
+        
+        # Create the updated row
+        updated_rows.append({
+            'date': date,
+            'tickers': ','.join(updated_tickers)
+        })
+        
+        changes_made += row_changes
+    
+    # Create new DataFrame with updated ticker names
+    updated_df = pd.DataFrame(updated_rows)
+    
+    # Remove any duplicate rows that might have been created by the name changes
+    original_count = len(updated_df)
+    updated_df = updated_df.drop_duplicates(subset=['date', 'tickers'], keep='first')
+    dedupe_removed = original_count - len(updated_df)
+    
+    # Save to new file
+    output_filename = 'sp_500_current_name_with_historical_components.csv'
+    updated_df.to_csv(output_filename, index=False)
+    
+    # Report results
+    print(f"Ticker name update completed:")
+    print(f"- Original records: {len(df)}")
+    print(f"- Records with updated ticker names: {len(updated_df)}")
+    print(f"- Individual ticker name changes made: {changes_made}")
+    print(f"- Duplicate records removed after updates: {dedupe_removed}")
+    print(f"- Output saved as: {output_filename}")
+    
+    # Show what changes were made
+    if changes_made > 0:
+        print(f"\nTicker mappings applied:")
+        for old_ticker, new_ticker in ticker_changes.items():
+            print(f"  {old_ticker} -> {new_ticker}")
+    
+    return updated_df
+
+
 def main():
     # read historical data
     sp500_hist = pd.read_csv('sp_500_historical_components.csv')
@@ -125,5 +243,13 @@ if __name__ == '__main__':
     # Check if user wants to clean historical data
     if len(sys.argv) > 1 and sys.argv[1] == '--clean':
         clean_historical_data()
+    elif len(sys.argv) > 1 and sys.argv[1] == '--update-names':
+        update_historical_ticker_names()
+    elif len(sys.argv) > 1 and sys.argv[1] == '--help':
+        print("Usage:")
+        print("  python sp500.py                  # Regular update (fetch current data)")
+        print("  python sp500.py --clean          # Clean redundant historical data")
+        print("  python sp500.py --update-names   # Update historical tickers to current names")
+        print("  python sp500.py --help           # Show this help message")
     else:
         main()
