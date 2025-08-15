@@ -21,7 +21,7 @@ def create_constituents(df):
 
     res_string = ','.join(ticker_list)
 
-    results_df = pd.DataFrame({'date': date.today(),
+    results_df = pd.DataFrame({'date': [row['date'] if 'date' in row else date.today()],
                                'tickers': [res_string],
                                })
 
@@ -208,27 +208,37 @@ def main():
     # current companies
     sp_500_url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
     sp_500_constituents = pd.read_html(sp_500_url, header=0)[0].rename(columns=str.lower)
-    sp_500_constituents['date'] = date.today()
-    sp_500_constituents.to_csv('sp500_constituents.csv', index=False)
-    sp_500_constituents.drop(['gics sector', 'gics sub-industry',
-                              'headquarters location', 'date added',
-                              'cik', 'founded', 'security'], axis=1, inplace=True)
+    
+    # Prepare the data for comparison (without saving yet)
+    temp_constituents = sp_500_constituents.copy()
+    temp_constituents.drop(['gics sector', 'gics sub-industry',
+                            'headquarters location', 'date added',
+                            'cik', 'founded', 'security'], axis=1, inplace=True)
 
-    sp_500_constituents.columns = ['ticker', 'date']
-    sp_500_constituents.sort_values(by='ticker', ascending=True,inplace=True)
+    temp_constituents.columns = ['ticker']
+    temp_constituents.sort_values(by='ticker', ascending=True, inplace=True)
 
-    # Create new constituents string
-    df = create_constituents(sp_500_constituents)
-    new_tickers = df['tickers'].iloc[0]
+    # Create new constituents string for comparison
+    ticker_list = temp_constituents['ticker'].tolist()
+    new_tickers = ','.join(ticker_list)
     
     # Check if the current constituents are different from the last record
     if not sp500_hist.empty:
         last_tickers = sp500_hist['tickers'].iloc[-1]
         if new_tickers == last_tickers:
-            print(f"No changes in S&P 500 constituents since {sp500_hist['date'].iloc[-1]}. Historical file not updated.")
+            print(f"No changes in S&P 500 constituents since {sp500_hist['date'].iloc[-1]}. Files not updated.")
             return
         else:
-            print(f"Changes detected in S&P 500 constituents. Updating historical file.")
+            print(f"Changes detected in S&P 500 constituents. Updating files.")
+    
+    # Only generate files if there are changes or this is the first run
+    # Now add the date and save the current constituents file
+    sp_500_constituents['date'] = date.today()
+    sp_500_constituents.to_csv('sp500_constituents.csv', index=False)
+    
+    # Prepare data for historical file
+    temp_constituents['date'] = date.today()
+    df = create_constituents(temp_constituents)
     
     # If there are changes or this is the first run, append the new record
     final = pd.concat([sp500_hist, df], ignore_index=True)
