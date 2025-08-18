@@ -86,47 +86,52 @@ def clean_historical_data():
 
 def load_ticker_mappings():
     """
-    Load ticker name mappings from the JSON configuration file.
-    Returns a dictionary of old_ticker -> new_ticker mappings.
+    Load ticker name mappings and deleted symbols from the JSON configuration file.
+    Returns a tuple of (mappings_dict, deleted_symbols_list).
     """
     config_file = 'ticker_name_mappings.json'
     
     try:
         with open(config_file, 'r', encoding='utf-8') as f:
             config = json.load(f)
-            return config.get('mappings', {})
+            mappings = config.get('mappings', {})
+            deleted_symbols = config.get('deleted_symbols', [])
+            return mappings, deleted_symbols
     except FileNotFoundError:
         print(f"Warning: Configuration file '{config_file}' not found!")
         print("Please create the configuration file or check the file path.")
-        return {}
+        return {}, []
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON in configuration file '{config_file}': {e}")
-        return {}
+        return {}, []
     except Exception as e:
         print(f"Error loading configuration file '{config_file}': {e}")
-        return {}
+        return {}, []
 
 
 def update_historical_ticker_names():
     """
-    Update historical ticker symbols to their current names and create a new file.
-    This handles cases like FB -> META, GOOG -> GOOGL, etc.
-    Creates 'sp_500_current_name_with_historical_components.csv'
+    Update historical ticker symbols to their current names and remove deleted symbols.
+    Creates a new file 'sp_500_current_name_with_historical_components.csv'
     
-    Ticker mappings are loaded from 'ticker_name_mappings.json'
+    This function:
+    1. Updates ticker names (e.g., FB -> META, GOOG -> GOOGL)
+    2. Removes deleted symbols (e.g., bankrupt companies with 'Q' suffix)
+    
+    Ticker mappings and deleted symbols are loaded from 'ticker_name_mappings.json'
     """
     
-    print("Loading ticker name mappings from configuration file...")
+    print("Loading ticker name mappings and deleted symbols from configuration file...")
     
-    # Load ticker changes from JSON configuration file
-    ticker_changes = load_ticker_mappings()
+    # Load ticker changes and deleted symbols from JSON configuration file
+    ticker_changes, deleted_symbols = load_ticker_mappings()
     
-    if not ticker_changes:
-        print("No ticker mappings found. Please check your configuration file.")
+    if not ticker_changes and not deleted_symbols:
+        print("No ticker mappings or deleted symbols found. Please check your configuration file.")
         return None
     
-    print(f"Loaded {len(ticker_changes)} ticker mappings from configuration.")
-    print("Updating historical ticker names to current names...")
+    print(f"Loaded {len(ticker_changes)} ticker mappings and {len(deleted_symbols)} deleted symbols from configuration.")
+    print("Updating historical ticker names to current names and removing deleted symbols...")
     
     # Read the historical components file
     try:
@@ -142,6 +147,7 @@ def update_historical_ticker_names():
     # Process each row and update ticker names
     updated_rows = []
     changes_made = 0
+    deletions_made = 0
     
     for idx, row in df.iterrows():
         date = row['date']
@@ -150,11 +156,18 @@ def update_historical_ticker_names():
         # Split the tickers string into individual tickers
         ticker_list = [ticker.strip() for ticker in tickers.split(',')]
         
-        # Update ticker names if they exist in the mapping
+        # Update ticker names and remove deleted symbols
         updated_tickers = []
         row_changes = 0
+        row_deletions = 0
         
         for ticker in ticker_list:
+            # Skip deleted symbols
+            if ticker in deleted_symbols:
+                row_deletions += 1
+                continue
+                
+            # Update ticker names if they exist in the mapping
             if ticker in ticker_changes:
                 updated_tickers.append(ticker_changes[ticker])
                 row_changes += 1
@@ -164,13 +177,15 @@ def update_historical_ticker_names():
         # Sort the updated tickers to maintain consistency
         updated_tickers.sort()
         
-        # Create the updated row
-        updated_rows.append({
-            'date': date,
-            'tickers': ','.join(updated_tickers)
-        })
+        # Only add the row if there are still tickers remaining after deletions
+        if updated_tickers:
+            updated_rows.append({
+                'date': date,
+                'tickers': ','.join(updated_tickers)
+            })
         
         changes_made += row_changes
+        deletions_made += row_deletions
     
     # Create new DataFrame with updated ticker names
     updated_df = pd.DataFrame(updated_rows)
@@ -185,10 +200,11 @@ def update_historical_ticker_names():
     updated_df.to_csv(output_filename, index=False)
     
     # Report results
-    print(f"Ticker name update completed:")
+    print(f"Ticker name update and deletion completed:")
     print(f"- Original records: {len(df)}")
     print(f"- Records with updated ticker names: {len(updated_df)}")
     print(f"- Individual ticker name changes made: {changes_made}")
+    print(f"- Individual ticker deletions made: {deletions_made}")
     print(f"- Duplicate records removed after updates: {dedupe_removed}")
     print(f"- Output saved as: {output_filename}")
     
@@ -197,6 +213,11 @@ def update_historical_ticker_names():
         print(f"\nTicker mappings applied:")
         for old_ticker, new_ticker in ticker_changes.items():
             print(f"  {old_ticker} -> {new_ticker}")
+    
+    if deletions_made > 0:
+        print(f"\nDeleted symbols removed:")
+        for symbol in deleted_symbols:
+            print(f"  {symbol} (deleted)")
     
     return updated_df
 
@@ -259,7 +280,7 @@ if __name__ == '__main__':
         print("Usage:")
         print("  python sp500.py                  # Regular update (fetch current data)")
         print("  python sp500.py --clean          # Clean redundant historical data")
-        print("  python sp500.py --update-names   # Update historical tickers to current names")
+        print("  python sp500.py --update-names   # Update historical tickers to current names and remove deleted symbols")
         print("  python sp500.py --help           # Show this help message")
     else:
         main()
