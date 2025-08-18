@@ -44,7 +44,11 @@
     "TMK": "GL",
     "UTX": "RTX",
     "VIAB": "PARA",
-    "XEC": "CTRA"
+    "XEC": "CTRA",
+    "bll": "BALL",
+    "fisv": "FI",
+    "pki": "RVTY",
+    "wrk": "SMWRK"
   },
   "deleted_symbols": [
     "AET",
@@ -99,7 +103,14 @@
     "VAR",
     "WFM",
     "WIN",
-    "XLNX"
+    "XLNX",
+    "dfs",
+    "hes",
+    "jnpr",
+    "mro",
+    "pxd",
+    "srcl",
+    "swn"
   ],
   "_change_log": [
     {
