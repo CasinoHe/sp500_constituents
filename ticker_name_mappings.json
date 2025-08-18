@@ -37,7 +37,6 @@
     "JEC": "J",
     "KORS": "CPRI",
     "KSU": "CP",
-    "MWV": "WRK",
     "MYL": "VTRS",
     "RTN": "RTX",
     "SYMC": "GEN",
@@ -48,7 +47,6 @@
     "BLL": "BALL",
     "FISV": "FI",
     "PKI": "RVTY",
-    "WRK": "SMWRK",
     "GPS": "GAP"
   },
   "deleted_symbols": [
