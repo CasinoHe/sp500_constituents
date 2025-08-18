@@ -119,7 +119,10 @@ def update_historical_ticker_names():
     
     This function:
     1. Updates ticker names (e.g., FB -> META, GOOG -> GOOGL)
-    2. Removes deleted symbols (e.g., bankrupt companies with 'Q' suffix)
+    2. Removes deleted symbols (e.g., bankrupt companies, acquired companies)
+    3. Removes redundant symbols within each date entry (e.g., if RTN->RTX and UTX->RTX, 
+       only one RTX will remain for that date)
+    4. Ensures all symbols are in uppercase format for consistency
     
     Ticker mappings and deleted symbols are loaded from 'ticker_name_mappings.json'
     """
@@ -151,6 +154,7 @@ def update_historical_ticker_names():
     updated_rows = []
     changes_made = 0
     deletions_made = 0
+    redundant_symbols_removed = 0
     
     for idx, row in df.iterrows():
         date = row['date']
@@ -158,6 +162,7 @@ def update_historical_ticker_names():
         
         # Split the tickers string into individual tickers
         ticker_list = [ticker.strip() for ticker in tickers.split(',')]
+        original_count = len(ticker_list)
         
         # Update ticker names and remove deleted symbols
         updated_tickers = []
@@ -181,6 +186,12 @@ def update_historical_ticker_names():
                 # Keep original ticker (but ensure uppercase for consistency)
                 updated_tickers.append(ticker_upper)
         
+        # Remove duplicate symbols within the same date entry
+        before_dedup_count = len(updated_tickers)
+        updated_tickers = list(set(updated_tickers))
+        after_dedup_count = len(updated_tickers)
+        row_redundant_removed = before_dedup_count - after_dedup_count
+        
         # Sort the updated tickers to maintain consistency
         updated_tickers.sort()
         
@@ -193,6 +204,7 @@ def update_historical_ticker_names():
         
         changes_made += row_changes
         deletions_made += row_deletions
+        redundant_symbols_removed += row_redundant_removed
     
     # Create new DataFrame with updated ticker names
     updated_df = pd.DataFrame(updated_rows)
@@ -212,6 +224,7 @@ def update_historical_ticker_names():
     print(f"- Records with updated ticker names: {len(updated_df)}")
     print(f"- Individual ticker name changes made: {changes_made}")
     print(f"- Individual ticker deletions made: {deletions_made}")
+    print(f"- Redundant symbols removed (duplicates within same date): {redundant_symbols_removed}")
     print(f"- Duplicate records removed after updates: {dedupe_removed}")
     print(f"- Output saved as: {output_filename}")
     

@@ -27,7 +27,7 @@
     "ANTM": "ELV",
     "BBT": "TFC",
     "BRCM": "AVGO",
-    "CBS": "PARA",
+    "CBS": "PSKY",
     "COG": "CTRA",
     "CTL": "LUMN",
     "DISCK": "WBD",
@@ -43,12 +43,12 @@
     "SYMC": "GEN",
     "TMK": "GL",
     "UTX": "RTX",
-    "VIAB": "PARA",
+    "VIAB": "PSKY",
     "XEC": "CTRA",
-    "bll": "BALL",
-    "fisv": "FI",
-    "pki": "RVTY",
-    "wrk": "SMWRK"
+    "BLL": "BALL",
+    "FISV": "FI",
+    "PKI": "RVTY",
+    "WRK": "SMWRK"
   },
   "deleted_symbols": [
     "AET",
