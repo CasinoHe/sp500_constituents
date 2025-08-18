@@ -87,26 +87,29 @@ def clean_historical_data():
 def load_ticker_mappings():
     """
     Load ticker name mappings and deleted symbols from the JSON configuration file.
-    Returns a tuple of (mappings_dict, deleted_symbols_list).
+    Returns a tuple of (mappings_dict, deleted_symbols_set).
+    All symbols are normalized to uppercase for case-insensitive matching.
     """
     config_file = 'ticker_name_mappings.json'
     
     try:
         with open(config_file, 'r', encoding='utf-8') as f:
             config = json.load(f)
-            mappings = config.get('mappings', {})
-            deleted_symbols = config.get('deleted_symbols', [])
+            # Convert all mappings to uppercase for case-insensitive matching
+            mappings = {k.upper(): v.upper() for k, v in config.get('mappings', {}).items()}
+            # Convert deleted symbols to uppercase set for faster lookup
+            deleted_symbols = {symbol.upper() for symbol in config.get('deleted_symbols', [])}
             return mappings, deleted_symbols
     except FileNotFoundError:
         print(f"Warning: Configuration file '{config_file}' not found!")
         print("Please create the configuration file or check the file path.")
-        return {}, []
+        return {}, set()
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON in configuration file '{config_file}': {e}")
-        return {}, []
+        return {}, set()
     except Exception as e:
         print(f"Error loading configuration file '{config_file}': {e}")
-        return {}, []
+        return {}, set()
 
 
 def update_historical_ticker_names():
@@ -162,17 +165,21 @@ def update_historical_ticker_names():
         row_deletions = 0
         
         for ticker in ticker_list:
-            # Skip deleted symbols
-            if ticker in deleted_symbols:
+            # Convert ticker to uppercase for case-insensitive matching
+            ticker_upper = ticker.upper()
+            
+            # Skip deleted symbols (case-insensitive)
+            if ticker_upper in deleted_symbols:
                 row_deletions += 1
                 continue
                 
-            # Update ticker names if they exist in the mapping
-            if ticker in ticker_changes:
-                updated_tickers.append(ticker_changes[ticker])
+            # Update ticker names if they exist in the mapping (case-insensitive)
+            if ticker_upper in ticker_changes:
+                updated_tickers.append(ticker_changes[ticker_upper])
                 row_changes += 1
             else:
-                updated_tickers.append(ticker)
+                # Keep original ticker (but ensure uppercase for consistency)
+                updated_tickers.append(ticker_upper)
         
         # Sort the updated tickers to maintain consistency
         updated_tickers.sort()
