@@ -48,7 +48,8 @@
     "BLL": "BALL",
     "FISV": "FI",
     "PKI": "RVTY",
-    "WRK": "SMWRK"
+    "WRK": "SMWRK",
+    "GPS": "GAP"
   },
   "deleted_symbols": [
     "AET",
@@ -110,7 +111,10 @@
     "mro",
     "pxd",
     "srcl",
-    "swn"
+    "swn",
+    "JWN",
+    "PDCO",
+    "WRK"
   ],
   "_change_log": [
     {
