@@ -47,7 +47,14 @@
     "BLL": "BALL",
     "FISV": "FI",
     "PKI": "RVTY",
-    "GPS": "GAP"
+    "GPS": "GAP",
+
+    "CDAY": "DAY",
+    "WLTW": "WTW",
+    "FBHS": "FBIN",
+    "FRC": "FRCB",
+    "HFC": "DINO",
+    "RE": "EG"
   },
   "deleted_symbols": [
     "AET",
@@ -113,7 +120,25 @@
     "JWN",
     "PDCO",
     "WRK",
-    "MWV"
+    "MWV",
+
+    "AMBD",
+    "ATVI",
+    "BXLT",
+    "CMCSK",
+    "CPGX",
+    "CTLT",
+    "CXO",
+    "DRE",
+    "DWDP",
+    "MXIM",
+    "NLOK",
+    "PEAK",
+    "TFCFA",
+    "TWTR",
+    "VIAC",
+    "WCG",
+    "SIVB"
   ],
   "_change_log": [
     {
