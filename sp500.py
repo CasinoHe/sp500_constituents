@@ -6,6 +6,8 @@ import os
 import sys
 import json
 from datetime import date
+import urllib.request
+from io import StringIO
 
 import pandas as pd
 
@@ -248,7 +250,10 @@ def main():
 
     # current companies
     sp_500_url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
-    sp_500_constituents = pd.read_html(sp_500_url, header=0)[0].rename(columns=str.lower)
+    # Add User-Agent header to avoid 403 Forbidden error
+    req = urllib.request.Request(sp_500_url, headers={'User-Agent': 'Mozilla/5.0'})
+    html = urllib.request.urlopen(req).read()
+    sp_500_constituents = pd.read_html(StringIO(html.decode('utf-8')), header=0)[0].rename(columns=str.lower)
     
     # Prepare the data for comparison (without saving yet)
     temp_constituents = sp_500_constituents.copy()
