@@ -72,10 +72,10 @@ def clean_historical_data():
     # Create backup of original file
     backup_filename = 'sp_500_historical_components_backup.csv'
     df['date'] = df['date'].dt.strftime('%Y-%m-%d')  # Convert back for backup
-    df.to_csv(backup_filename, index=False)
+    df.to_csv(backup_filename, index=False, lineterminator='\n')
     
     # Save cleaned data
-    cleaned_df.to_csv('sp_500_historical_components.csv', index=False)
+    cleaned_df.to_csv('sp_500_historical_components.csv', index=False, lineterminator='\n')
     
     print(f"Historical data cleanup completed:")
     print(f"- Original records: {original_count}")
@@ -218,7 +218,7 @@ def update_historical_ticker_names():
     
     # Save to new file
     output_filename = 'sp_500_current_name_with_historical_components.csv'
-    updated_df.to_csv(output_filename, index=False)
+    updated_df.to_csv(output_filename, index=False, lineterminator='\n')
     
     # Report results
     print(f"Ticker name update and deletion completed:")
@@ -253,14 +253,37 @@ def main():
     # Add User-Agent header to avoid 403 Forbidden error
     req = urllib.request.Request(sp_500_url, headers={'User-Agent': 'Mozilla/5.0'})
     html = urllib.request.urlopen(req).read()
-    sp_500_constituents = pd.read_html(StringIO(html.decode('utf-8')), header=0)[0].rename(columns=str.lower)
+    
+    # Try to find the correct table with S&P 500 constituents
+    tables = pd.read_html(StringIO(html.decode('utf-8')), header=0)
+    sp_500_constituents = None
+    
+    # Look through tables to find one with a symbol/ticker column
+    for table in tables:
+        table_lower = table.rename(columns=str.lower)
+        # Check if this table has a symbol or ticker column
+        if any(col in table_lower.columns for col in ['symbol', 'ticker']):
+            sp_500_constituents = table_lower
+            break
+    
+    if sp_500_constituents is None:
+        raise ValueError(f"Could not find S&P 500 constituents table. Found {len(tables)} tables.")
     
     # Prepare the data for comparison (without saving yet)
     temp_constituents = sp_500_constituents.copy()
-    temp_constituents.drop(['gics sector', 'gics sub-industry',
-                            'headquarters location', 'date added',
-                            'cik', 'founded', 'security'], axis=1, inplace=True)
-
+    
+    # Find the symbol/ticker column (could be 'symbol' or 'ticker')
+    ticker_col = None
+    for col in temp_constituents.columns:
+        if col in ['symbol', 'ticker']:
+            ticker_col = col
+            break
+    
+    if ticker_col is None:
+        raise ValueError(f"Could not find ticker column. Available columns: {temp_constituents.columns.tolist()}")
+    
+    # Keep only the ticker column
+    temp_constituents = temp_constituents[[ticker_col]].copy()
     temp_constituents.columns = ['ticker']
     temp_constituents.sort_values(by='ticker', ascending=True, inplace=True)
 
@@ -280,7 +303,7 @@ def main():
     # Only generate files if there are changes or this is the first run
     # Now add the date and save the current constituents file
     sp_500_constituents['date'] = date.today()
-    sp_500_constituents.to_csv('sp500_constituents.csv', index=False)
+    sp_500_constituents.to_csv('sp500_constituents.csv', index=False, lineterminator='\n')
     
     # Prepare data for historical file
     temp_constituents['date'] = date.today()
@@ -291,7 +314,7 @@ def main():
 
     # output
     final = final.drop_duplicates(subset=['date', 'tickers'],keep='last')
-    final.to_csv('sp_500_historical_components.csv', index=False)
+    final.to_csv('sp_500_historical_components.csv', index=False, lineterminator='\n')
     print(f"Historical components file updated with data for {date.today()}")
     
 
