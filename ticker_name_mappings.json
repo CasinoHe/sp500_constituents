@@ -19,7 +19,7 @@
     "BRKB": "BRK.B",
     "BRK-B": "BRK.B",
     "BF-B": "BF.B",
-    "KRFT": "KHC",
+
     "DISCA": "WBD",
     "PARA": "PSKY",
     "ABC": "COR",
@@ -45,7 +45,6 @@
     "VIAB": "PSKY",
     "XEC": "CTRA",
     "BLL": "BALL",
-    "FISV": "FI",
     "PKI": "RVTY",
     "GPS": "GAP",
 
@@ -156,6 +155,7 @@
     "IGT",
     "IPG",
     "WBA",
+    "KRFT",
 
     "FL"
   ],
