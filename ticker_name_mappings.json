@@ -142,8 +142,22 @@
     "DISH",
     "ENDP",
     "FLT",
+    "CA",
+    "BMS",
+    "BTUUQ",
+    "CSRA",
+    "EVHC",
+    "FI",
+    "FRX",
+    "RDC",
+    "X",
+    "ANSS",
+    "HBI",
+    "IGT",
+    "IPG",
+    "WBA",
 
-    "CA"
+    "FL"
   ],
   "_change_log": [
     {
