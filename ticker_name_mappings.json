@@ -48,7 +48,8 @@
     "HRS": "LHX",
     "HFC": "DINO",
     "BBT": "TFC",
-    "BK": "BNY"
+    "BK": "BNY",
+    "SATS": "ECHO"
   },
   "deleted_symbols": [
     "AET",
@@ -184,6 +185,12 @@
       "date": "2025-12-14",
       "changes": [
         "Reorganize the stock list to distinguish between mergers, deletions, etc."
+      ]
+    },
+    {
+      "date": "2026-09-21",
+      "changes": [
+        "Added SATS->ECHO mapping for the EchoStar ticker change effective 2026-06-24"
       ]
     }
   ]
